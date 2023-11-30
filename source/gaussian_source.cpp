@@ -41,7 +41,7 @@ double GaussianSource::SampleTimeValue(double t)
 
 		double amp = 1 / (sqrt(2 * M_PI) * sigma);
 
-		val = 20 * Simulation::c0_ * Simulation::c0_ * amp * exp(-arg);
+		val = 1000 * Simulation::c0_ * Simulation::c0_ * amp * exp(-arg);
 	}
 
 	return val;

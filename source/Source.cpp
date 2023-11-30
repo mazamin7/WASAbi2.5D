@@ -26,7 +26,7 @@ bool is_record = false;
 
 double Partition::boundary_absorption_ = 1;	// Absorption coefficients of the boundaries.
 double Simulation::air_absorption_ = 0; // Absorption coefficients of air.
-double Simulation::duration_ = 2;		// Duration of the whole simulation (seconds).
+double Simulation::duration_ = 20;		// Duration of the whole simulation (seconds).
 
 //double Simulation::dh_ = 0.05;			// Space sampling rate.
 //double Simulation::dt_ = 0.625e-4;		// Time sampling rate.
@@ -40,8 +40,8 @@ double Simulation::duration_ = 2;		// Duration of the whole simulation (seconds)
 //double Simulation::dh_ = 0.5;
 //double Simulation::dt_ = 6.25e-4;
 
-double Simulation::dh_ = 0.1;
-double Simulation::dt_ = 0.0025;
+double Simulation::dh_ = 0.4;
+double Simulation::dt_ = 0.01;
 
 double Simulation::c0_ = 10;// 3.435e2;		// Speed of sound
 int Simulation::n_pml_layers_ = 10;		// Number of pml layers.
