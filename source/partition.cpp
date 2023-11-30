@@ -192,25 +192,28 @@ void Partition::ComputeSourceForcingTerms(double t)
 {
 	for (auto source : sources_)
 	{
-		auto force_val_t = source->SampleTimeValue(t);
+		double force_val_t = source->SampleTimeValue(t);
 		auto points = source->points_;
+		int half = int((points - 1) / 2);
 
 		for (int xi = 0; xi < points; xi++){
-			auto force_x_pos = source->x_0_ + xi - (points - 1) / 2;
+			auto force_x_pos = source->x_0_ + xi - half;
 
 			for (int yi = 0; yi < points; yi++) {
-				auto force_y_pos = source->y_0_ + yi - (points - 1) / 2;
+				auto force_y_pos = source->y_0_ + yi - half;
 
 				for (int zi = 0; zi < points; zi++) {
-					auto force_z_pos = source->z_0_ + zi - (points - 1) / 2;
+					auto force_z_pos = source->z_0_ + zi - half;
 
-					auto force_val_space = source->SampleSpaceValue(force_x_pos, force_y_pos, force_z_pos);
+					double force_val_space = source->SampleSpaceValue(force_x_pos, force_y_pos, force_z_pos);
+
+					double force_val = force_val_space * force_val_t;
 
 					set_force(
 						force_x_pos - x_start_,
 						force_y_pos - y_start_,
 						force_z_pos - z_start_,
-						force_val_space * force_val_t);
+						force_val);
 				}
 			}
 		}

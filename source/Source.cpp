@@ -41,7 +41,7 @@ double Simulation::dt_ = 1.25e-4;
 //double Simulation::dt_ = 6.25e-4;
 
 double Simulation::c0_ = 3.435e2;		// Speed of sound
-int Simulation::n_pml_layers_ = 5;		// Number of pml layers.
+int Simulation::n_pml_layers_ = 20;		// Number of pml layers.
 
 bool Simulation::is_pre_merge = true;	// Interpartition interface handling method
 bool Simulation::use_FDTD = false;	// Interpartition interface handling method
@@ -58,9 +58,9 @@ int main()
 	std::vector<std::shared_ptr<SoundSource>> sources;
 	std::vector<std::shared_ptr<Recorder>> recorders;
 
-	partitions = Partition::ImportPartitions("./assets/hall.txt");			// Read partition properties from file.
-	sources = SoundSource::ImportSources("./assets/hall-sources.txt");		// Read source properties from file.
-	recorders = Recorder::ImportRecorders("./assets/hall-recorders.txt");	// Read recorder properties from file. Recorder is not mandatory. 
+	partitions = Partition::ImportPartitions("./assets/hall2.txt");			// Read partition properties from file.
+	sources = SoundSource::ImportSources("./assets/hall2-sources.txt");		// Read source properties from file.
+	recorders = Recorder::ImportRecorders("./assets/hall2-recorders.txt");	// Read recorder properties from file. Recorder is not mandatory. 
 
 	for (auto record : recorders)
 	{

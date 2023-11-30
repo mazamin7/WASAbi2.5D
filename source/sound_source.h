@@ -7,12 +7,12 @@
 class SoundSource
 {
 	int id_;
-	int x_0_, y_0_, z_0_;
-	int points_;
+	int x_0_, y_0_, z_0_, t_0_;
+	int points_, samples_;
 	std::fstream source_;
 
 public:
-	SoundSource(int x_0, int y_0, int z_0, int points);
+	SoundSource(int x_0, int y_0, int z_0, int t_0, int points, int samples);
 	~SoundSource();
 
 	virtual double SampleSpaceValue(double x, double y, double z) = 0;
@@ -31,9 +31,15 @@ public:
 	int z_0() {
 		return z_0_;
 	}
+	int t_0() {
+		return t_0_;
+	}
 
 	int points() {
 		return points_;
+	}
+	int samples() {
+		return samples_;
 	}
 
 	friend class Simulation;
