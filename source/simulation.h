@@ -26,7 +26,7 @@ class Simulation
 	struct Info
 	{
 		size_t num_partitions{ 0 };
-		size_t num_dct_partitions{ 0 };
+		size_t num_air_partitions{ 0 };
 		size_t num_pml_partitions{ 0 };
 		size_t num_sources{ 0 };
 		size_t num_boundaries{ 0 };
@@ -44,6 +44,7 @@ public:
 	static int n_pml_layers_;
 
 	static bool is_pre_merge;
+	static bool use_FDTD;
 
 	int time_step_{ 0 };
 

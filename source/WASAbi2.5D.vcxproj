@@ -150,6 +150,7 @@ copy "$(SolutionDir)fftw-3.3.5-dll\$(PlatForm)\*.dll" "$(TargetDir)"
     <ClCompile Include="boundary.cpp" />
     <ClCompile Include="dct_partition.cpp" />
     <ClCompile Include="dct_volume.cpp" />
+    <ClCompile Include="fdtd_partition.cpp" />
     <ClCompile Include="gaussian_source.cpp" />
     <ClCompile Include="partition.cpp" />
     <ClCompile Include="pml_partition.cpp" />
@@ -163,6 +164,7 @@ copy "$(SolutionDir)fftw-3.3.5-dll\$(PlatForm)\*.dll" "$(TargetDir)"
     <ClInclude Include="boundary.h" />
     <ClInclude Include="dct_partition.h" />
     <ClInclude Include="dct_volume.h" />
+    <ClInclude Include="fdtd_partition.h" />
     <ClInclude Include="gaussian_source.h" />
     <ClInclude Include="partition.h" />
     <ClInclude Include="pml_partition.h" />

@@ -46,13 +46,13 @@ Simulation::Simulation(std::vector<std::shared_ptr<Partition>> &partitions, std:
 		}
 	}
 
-	info_.num_dct_partitions = partitions_.size();
+	info_.num_air_partitions = partitions_.size();
 	info_.num_boundaries = boundaries_.size();
 	info_.num_sources = sources_.size();
 
 
 	// Find and create PML partitions.
-	for (int cnt = 0; cnt < info_.num_dct_partitions; cnt++)
+	for (int cnt = 0; cnt < info_.num_air_partitions; cnt++)
 	{
 		auto partition = partitions_[cnt];
 		int start;
@@ -503,7 +503,7 @@ void Simulation::Info()
 		<< "(s), c0 = " << std::to_string(Simulation::c0_)
 		<< "(m/s), air absorption = " << std::to_string(Simulation::air_absorption_) << "(1/s)"
 		<< std::endl;
-	std::cout << "Number of dct_partitions: " << info_.num_dct_partitions << std::endl;
+	std::cout << "Number of air_partitions: " << info_.num_air_partitions << std::endl;
 	std::cout << "Number of pml_partitions: " << info_.num_pml_partitions << std::endl;
 	std::cout << "Number of boundaries: " << info_.num_boundaries << std::endl;
 	std::cout << "Number of sources: " << info_.num_sources << std::endl;
@@ -529,6 +529,11 @@ void Simulation::Info()
 		std::cout << "Using Pre-merge" << std::endl;
 	else
 		std::cout << "Using Post-merge" << std::endl;
+	std::cout << "------------------------------------------------------------" << std::endl;
+	if (use_FDTD)
+		std::cout << "Using FDTD method" << std::endl;
+	else
+		std::cout << "Using Fourier method" << std::endl;
 	std::cout << "------------------------------------------------------------" << std::endl;
 }
 
