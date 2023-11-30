@@ -20,7 +20,7 @@
 
 using namespace std;
 
-bool is_record = true;
+bool is_record = false;
 
 /* Set constant parameters. */
 
@@ -31,16 +31,16 @@ double Simulation::duration_ = 2;		// Duration of the whole simulation (seconds)
 //double Simulation::dh_ = 0.05;			// Space sampling rate.
 //double Simulation::dt_ = 0.625e-4;		// Time sampling rate.
 
-double Simulation::dh_ = 0.1;
-double Simulation::dt_ = 1.25e-4;
+//double Simulation::dh_ = 0.1;
+//double Simulation::dt_ = 1.25e-4;
 
-//double Simulation::dh_ = 0.2;
-//double Simulation::dt_ = 2e-4;
+double Simulation::dh_ = 0.2;
+double Simulation::dt_ = 2e-4;
 
 //double Simulation::dh_ = 0.5;
 //double Simulation::dt_ = 6.25e-4;
 
-double Simulation::c0_ = 3.435e2;		// Speed of sound
+double Simulation::c0_ = 10;// 3.435e2;		// Speed of sound
 int Simulation::n_pml_layers_ = 10;		// Number of pml layers.
 
 bool Simulation::is_pre_merge = true;	// Interpartition interface handling method
