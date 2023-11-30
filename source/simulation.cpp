@@ -37,9 +37,9 @@ Simulation::Simulation(std::vector<std::shared_ptr<Partition>> &partitions, std:
 	{
 		for (auto source : sources_)
 		{
-			if (source->x_ >= partition->x_start_ && source->x_ < partition->x_end_ &&
-				source->y_ >= partition->y_start_ && source->y_ < partition->y_end_ &&
-				source->z_ >= partition->z_start_ && source->z_ < partition->z_end_)
+			if (source->x_0_ >= partition->x_start_ && source->x_0_ < partition->x_end_ &&
+				source->y_0_ >= partition->y_start_ && source->y_0_ < partition->y_end_ &&
+				source->z_0_ >= partition->z_start_ && source->z_0_ < partition->z_end_)
 			{
 				partition->AddSource(source);
 			}
@@ -301,7 +301,7 @@ int Simulation::Update()
 {
 	int time_step = time_step_++;
 	//std::cout << "#" << std::setw(5) << time_step << " : ";
-	//std::cout << std::to_string(sources_[0]->SampleValue(time_step)) << " ";
+	//std::cout << std::to_string(sources_[0]->SampleTimeValue(time_step)) << " ";
 
 	// update pressure
 #pragma omp parallel for
@@ -395,7 +395,7 @@ int Simulation::Update()
 		bool render_pml = true;
 		if (look_from_ == 0)	//xy
 		{
-			int pixels_z = sources_[0]->z();
+			int pixels_z = sources_[0]->z_0();
 			for (auto partition : partitions_)
 			{
 				if (!render_pml)
@@ -441,7 +441,7 @@ int Simulation::Update()
 		}
 		else if (look_from_ == 1)	//yz
 		{
-			int pixels_x = sources_[0]->x();
+			int pixels_x = sources_[0]->x_0();
 			for (auto partition : partitions_)
 			{
 				if (!render_pml)
@@ -522,7 +522,7 @@ void Simulation::Info()
 	std::cout << "------------------------------------------------------------" << std::endl;
 	for (auto s : sources_)
 	{
-		std::cout << "Source " << s->id_ << ": " << s->x() << "," << s->y() << "," << s->z() << std::endl;
+		std::cout << "Source " << s->id_ << ": " << s->x_0() << "," << s->y_0() << "," << s->z_0() << std::endl;
 	}
 	std::cout << "------------------------------------------------------------" << std::endl;
 	if (is_pre_merge)

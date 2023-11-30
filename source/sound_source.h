@@ -7,27 +7,33 @@
 class SoundSource
 {
 	int id_;
-	int x_, y_, z_;
+	int x_0_, y_0_, z_0_;
+	int points_;
 	std::fstream source_;
 
 public:
-	SoundSource(int x, int y, int z);
+	SoundSource(int x_0, int y_0, int z_0, int points);
 	~SoundSource();
 
-	virtual double SampleValue(double t) = 0;
+	virtual double SampleSpaceValue(double x, double y, double z) = 0;
+	virtual double SampleTimeValue(double t) = 0;
 
 	static std::vector<std::shared_ptr<SoundSource>> ImportSources(std::string path);
 
 	void RecordSource();
 
-	int x() {
-		return x_;
+	int x_0() {
+		return x_0_;
 	}
-	int y() {
-		return y_;
+	int y_0() {
+		return y_0_;
 	}
-	int z() {
-		return z_;
+	int z_0() {
+		return z_0_;
+	}
+
+	int points() {
+		return points_;
 	}
 
 	friend class Simulation;
