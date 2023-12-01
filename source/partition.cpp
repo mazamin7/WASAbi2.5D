@@ -193,7 +193,7 @@ void Partition::ComputeSourceForcingTerms(double t)
 	for (auto source : sources_)
 	{
 		double force_val_t = source->SampleTimeValue(t);
-		auto points = source->points_;
+		int points = source->points_;
 		int half = int((points - 1) / 2);
 
 		for (int xi = 0; xi < points; xi++){

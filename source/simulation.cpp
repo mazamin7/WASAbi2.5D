@@ -388,7 +388,7 @@ int Simulation::Update()
 	}
 
 	// Visualization
-	if (time_step % 10 == 1)
+	if (time_step % 1 == 0)
 	{
 		SDL_PixelFormat* fmt = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
 		int v_coef = 1;

@@ -29,6 +29,7 @@ double GaussianSource::SampleSpaceValue(double x, double y, double z)
 	return val;
 }
 
+/*
 double GaussianSource::SampleTimeValue(double t)
 {
 	double val = 0.0;
@@ -42,6 +43,29 @@ double GaussianSource::SampleTimeValue(double t)
 		double amp = 1 / (sqrt(2 * M_PI) * sigma);
 
 		val = 100000 * Simulation::c0_ * Simulation::c0_ * amp * exp(-arg);
+	}
+
+	return val;
+}
+*/
+
+double GaussianSource::SampleTimeValue(double t)
+{
+	double val = 0.0;
+
+	double freq_nyq = 1 / Simulation::dt_ * 0.5;
+	double freq = freq_nyq * 0.2;
+	double T = 1 / freq;
+	double T_samples = T / Simulation::dt_;
+
+	if ((t >= t_0()) && (t < t_0() + T_samples)) {
+		double omega = 2 * M_PI * freq;
+
+		double arg = omega * (t - t_0()) * Simulation::dt_;
+
+		double amp = 40 * 1E1;
+
+		val = 1 * Simulation::c0_ * Simulation::c0_ * amp * sin(arg);
 	}
 
 	return val;
