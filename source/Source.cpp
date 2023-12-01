@@ -26,7 +26,7 @@ bool is_record = false;
 
 double Partition::boundary_absorption_ = 1;	// Absorption coefficients of the boundaries.
 double Simulation::air_absorption_ = 0; // Absorption coefficients of air.
-double Simulation::duration_ = 20;		// Duration of the whole simulation (seconds).
+double Simulation::duration_ = 200;		// Duration of the whole simulation (seconds).
 
 //double Simulation::dh_ = 0.05;			// Space sampling rate.
 //double Simulation::dt_ = 0.625e-4;		// Time sampling rate.
@@ -40,11 +40,11 @@ double Simulation::duration_ = 20;		// Duration of the whole simulation (seconds
 //double Simulation::dh_ = 0.5;
 //double Simulation::dt_ = 6.25e-4;
 
-double Simulation::dh_ = 0.05;
-double Simulation::dt_ = 0.0125;
+double Simulation::dh_ = 0.25;
+double Simulation::dt_ = 0.0625;
 
 double Simulation::c0_ = 1; // 3.435e2;		// Speed of sound
-int Simulation::n_pml_layers_ = 20;		// Number of pml layers.
+int Simulation::n_pml_layers_ = 5;		// Number of pml layers.
 
 bool Simulation::is_pre_merge = true;	// Interpartition interface handling method
 bool Simulation::use_FDTD = false;	// Interpartition interface handling method
@@ -139,7 +139,8 @@ int main()
 			}
 		}
 
-		message = std::to_string(time_step) + '/' + std::to_string(total_time_steps);
+		// message = std::to_string(time_step) + '/' + std::to_string(total_time_steps);
+		message = std::to_string(time_step * Simulation::dt_) + '/' + std::to_string(total_time_steps * Simulation::dt_);
 		SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, message.c_str(), White);
 		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
 

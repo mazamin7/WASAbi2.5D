@@ -54,11 +54,11 @@ double GaussianSource::SampleTimeValue(double t)
 	double val = 0.0;
 
 	double freq_nyq = 1 / Simulation::dt_ * 0.5;
-	double freq = freq_nyq * 0.05;
+	double freq = freq_nyq * 0.1;
 	double T = 1 / freq;
 	double T_samples = T / Simulation::dt_;
 
-	if ((t >= t_0()) && (t < t_0() + T_samples * 0.5)) {
+	if ((t >= t_0()) && (t < t_0() + T_samples)) {
 		double omega = 2 * M_PI * freq;
 
 		double arg = omega * (t - t_0()) * Simulation::dt_;
