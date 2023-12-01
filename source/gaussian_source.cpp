@@ -63,7 +63,7 @@ double GaussianSource::SampleTimeValue(double t)
 
 		double arg = omega * (t - t_0()) * Simulation::dt_;
 
-		double amp = 40 * 1E1;
+		double amp = 40 * 2E1;
 
 		val = 1 * Simulation::c0_ * Simulation::c0_ * amp * sin(arg);
 	}
