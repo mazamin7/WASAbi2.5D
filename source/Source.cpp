@@ -40,11 +40,11 @@ double Simulation::duration_ = 20;		// Duration of the whole simulation (seconds
 //double Simulation::dh_ = 0.5;
 //double Simulation::dt_ = 6.25e-4;
 
-double Simulation::dh_ = 0.025;
-double Simulation::dt_ = 0.00625;
+double Simulation::dh_ = 0.05;
+double Simulation::dt_ = 0.0125;
 
 double Simulation::c0_ = 1; // 3.435e2;		// Speed of sound
-int Simulation::n_pml_layers_ = 3;		// Number of pml layers.
+int Simulation::n_pml_layers_ = 20;		// Number of pml layers.
 
 bool Simulation::is_pre_merge = true;	// Interpartition interface handling method
 bool Simulation::use_FDTD = false;	// Interpartition interface handling method
