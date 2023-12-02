@@ -4,7 +4,7 @@
 class GaussianSource :public SoundSource
 {
 public:
-	GaussianSource(int x_0, int y_0, int z_0, int t_0, int points);
+	GaussianSource(int x_0, int y_0, int z_0, int t_0, int points, double a_freq);
 	~GaussianSource();
 
 	virtual double SampleSpaceValue(double x, double y, double z);

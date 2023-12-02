@@ -4,7 +4,7 @@
 #include "simulation.h"
 
 
-GaussianSource::GaussianSource(int x_0, int y_0, int z_0, int t_0, int points) :SoundSource(x_0, y_0, z_0, t_0, points)
+GaussianSource::GaussianSource(int x_0, int y_0, int z_0, int t_0, int points, double a_source) :SoundSource(x_0, y_0, z_0, t_0, points, a_source)
 {
 }
 
@@ -34,7 +34,7 @@ double GaussianSource::SampleTimeValue(double t)
 	double val = 0.0;
 
 	double freq_nyq = 1 / Simulation::dt_ * 0.5;
-	double freq = freq_nyq * 0.05;
+	double freq = freq_nyq * a_freq();
 	double T = 1 / freq;
 	double T_samples = T / Simulation::dt_;
 
