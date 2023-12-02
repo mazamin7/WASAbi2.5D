@@ -76,30 +76,36 @@ PmlPartition::PmlPartition(std::shared_ptr<Partition> neighbor_part, PmlType typ
 		{
 			for (int i = 0; i < width_; i++)
 			{
+				double term1 = 0.0;
+
 				switch (type)
 				{
 				case PmlPartition::P_BACK:
-					zetaz_[GetIndex(i, j, k)] = zeta_ * ((k + 1) * dh_ / thickness_ - sin(2 * M_PI * (k + 1) * dh_ / thickness_) / 2 / M_PI);
+					term1 = k * dh_ / thickness_;
 					break;
 				case PmlPartition::P_FRONT:
-					zetaz_[GetIndex(i, j, k)] = zeta_ * ((depth_ - k) * dh_ / thickness_ - sin(2 * M_PI * (depth_ - k) * dh_ / thickness_) / 2 / M_PI);
+					term1 = (depth_ - k - 1) * dh_ / thickness_;
 					break;
 				case PmlPartition::P_BOTTOM:
-					zetay_[GetIndex(i, j, k)] = zeta_ * ((j + 1) * dh_ / thickness_ - sin(2 * M_PI * (j + 1) * dh_ / thickness_) / 2 / M_PI);
+					term1 = j * dh_ / thickness_;
 					break;
 				case PmlPartition::P_TOP:
-					zetay_[GetIndex(i, j, k)] = zeta_ * ((height_ - j) * dh_ / thickness_ - sin(2 * M_PI * (height_ - j) * dh_ / thickness_) / 2 / M_PI);
+					term1 = (height_ - j - 1) * dh_ / thickness_;
 					break;
 				case PmlPartition::P_RIGHT:
 					// zeta_x = zeta * ( (|x - a|)/L - (sin(2 Pi (|x - a|)/(L))) / (2 Pi) )
-					zetax_[GetIndex(i, j, k)] = zeta_ * ((i + 1) * dh_ / thickness_ - sin(2 * M_PI * (i + 1) * dh_ / thickness_) / 2 / M_PI);
+					term1 = i * dh_ / thickness_;
 					break;
 				case PmlPartition::P_LEFT:
-					zetax_[GetIndex(i, j, k)] = zeta_ * ((width_ - i) * dh_ / thickness_ - sin(2 * M_PI * (width_ - i) * dh_ / thickness_) / 2 / M_PI);
+					term1 = (width_ - i - 1) * dh_ / thickness_;
 					break;
 				default:
 					break;
 				}
+
+				auto term2 = sin(2 * M_PI * term1) / 2 / M_PI;
+				auto zeta_curr = zeta_ * (term1 - term2);
+				zetax_[GetIndex(i, j, k)] = zeta_curr;
 			}
 		}
 	}
