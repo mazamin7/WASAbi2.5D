@@ -14,8 +14,8 @@ int FdtdPartition::GetIndex(int x, int y, int z)
 	return z * height_ * width_ + y * width_ + x;
 }
 
-FdtdPartition::FdtdPartition(int xs, int ys, int zs, int w, int h, int d)
-	: Partition(xs, ys, zs, w, h, d)
+FdtdPartition::FdtdPartition(int xs, int ys, int zs, int w, int h, int d, double alpha_abs_)
+	: Partition(xs, ys, zs, w, h, d, alpha_abs_)
 {
 	include_self_terms_ = true;
 	should_render_ = true;
@@ -76,8 +76,6 @@ void FdtdPartition::Update_pressure()
 		amp = 1.0;
 	}
 
-	auto alpha_abs = air_absorption_;
-
 #pragma omp parallel for
 	for (int k = 0; k < depth; k++)
 	{
@@ -111,12 +109,12 @@ void FdtdPartition::Update_pressure()
 
 				
 				// -2 alpha p_t
-				double term4 = alpha_abs * p_old_[GetIndex(i, j, k)] / dt;
+				double term4 = air_absorption_ * p_old_[GetIndex(i, j, k)] / dt;
 
 
 				// p_{tt} = c_0^2 Delta p - 2 alpha p_t
 				p_new_[GetIndex(i, j, k)] = term1 + dt * dt * (term3 + term4 + force_[GetIndex(i, j, k)]);
-				p_new_[GetIndex(i, j, k)] = p_new_[GetIndex(i, j, k)] / ( 1 + dt * alpha_abs );
+				p_new_[GetIndex(i, j, k)] = p_new_[GetIndex(i, j, k)] / ( 1 + dt * air_absorption_);
 			}
 		}
 	}

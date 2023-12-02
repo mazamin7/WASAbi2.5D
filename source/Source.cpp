@@ -25,7 +25,7 @@ bool is_record = false;
 /* Set constant parameters. */
 
 double Partition::boundary_absorption_ = 1;	// Absorption coefficients of the boundaries.
-double Simulation::air_absorption_ = 0; // Absorption coefficients of air.
+//double Simulation::air_absorption_ = 0; // Absorption coefficients of air.
 double Simulation::duration_ = 2000;		// Duration of the whole simulation (seconds).
 
 //double Simulation::dh_ = 0.05;			// Space sampling rate.
@@ -40,13 +40,13 @@ double Simulation::duration_ = 2000;		// Duration of the whole simulation (secon
 //double Simulation::dh_ = 0.5;
 //double Simulation::dt_ = 6.25e-4;
 
-double Simulation::dh_ = 0.25/2;
-double Simulation::dt_ = 0.0625/2;
+double Simulation::dh_ = 0.25*2;
+double Simulation::dt_ = 0.0625*2;
 
 double Simulation::c0_ = 1; // 3.435e2;		// Speed of sound
-int Simulation::n_pml_layers_ = 50;		// Number of pml layers.
+int Simulation::n_pml_layers_ = 5;		// Number of pml layers.
 
-bool Simulation::is_pre_merge = true;	// Interpartition interface handling method
+bool Simulation::is_pre_merge = false;	// Interpartition interface handling method
 bool Simulation::use_FDTD = false;	// Interpartition interface handling method
 bool Simulation::use_seven = true;
 
@@ -54,7 +54,7 @@ int main()
 {
 	double time1 = omp_get_wtime();		// Record the begining time. Used for showing the consuming time.
 
-	std::string dir_name = "./output/" + std::to_string(Simulation::dh_) + "_" + std::to_string(Partition::boundary_absorption_) + "_" + std::to_string(Simulation::air_absorption_);
+	std::string dir_name = "./output/" + std::to_string(Simulation::dh_) + "_" + std::to_string(Partition::boundary_absorption_);
 	CreateDirectory(dir_name.c_str(), NULL);	// Prepare for the output folder.
 												// ! Without this and the corresponding folder does not exist, the program will not write the output data.
 

@@ -8,7 +8,7 @@
 #include <fstream>
 #include <iostream>
 
-Partition::Partition(int xs, int ys, int zs, int w, int h, int d)
+Partition::Partition(int xs, int ys, int zs, int w, int h, int d, double alpha_abs_)
 	: x_start_(xs), y_start_(ys), z_start_(zs), width_(w), height_(h), depth_(d)
 {
 	static int id_generator = 0;
@@ -17,7 +17,7 @@ Partition::Partition(int xs, int ys, int zs, int w, int h, int d)
 	dh_ = Simulation::dh_;
 	dt_ = Simulation::dt_;
 	c0_ = Simulation::c0_;
-	air_absorption_ = Simulation::air_absorption_;
+	air_absorption_ = alpha_abs_;
 
 	second_order_ = air_absorption_ == 0;
 
@@ -164,16 +164,18 @@ std::vector<std::shared_ptr<Partition>> Partition::ImportPartitions(std::string 
 	{
 		double x_start, y_start, z_start;
 		double width, height, depth;
+		double alpha_abs;
 
 		file >> x_start >> y_start >> z_start;
 		file >> width >> height >> depth;
+		file >> alpha_abs;
 
 		if (file.eof()) break;
 
 		if (Simulation::use_FDTD)
-			partitions.push_back(std::make_shared<FdtdPartition>((int) (x_start / Simulation::dh_), (int)(y_start / Simulation::dh_), (int)(z_start / Simulation::dh_), (int)(width / Simulation::dh_), (int)(height / Simulation::dh_), (int)(depth / Simulation::dh_)));
+			partitions.push_back(std::make_shared<FdtdPartition>((int) (x_start / Simulation::dh_), (int)(y_start / Simulation::dh_), (int)(z_start / Simulation::dh_), (int)(width / Simulation::dh_), (int)(height / Simulation::dh_), (int)(depth / Simulation::dh_), alpha_abs));
 		else
-			partitions.push_back(std::make_shared<DctPartition>((int)(x_start / Simulation::dh_), (int)(y_start / Simulation::dh_), (int)(z_start / Simulation::dh_), (int)(width / Simulation::dh_), (int)(height / Simulation::dh_), (int)(depth / Simulation::dh_)));
+			partitions.push_back(std::make_shared<DctPartition>((int) (x_start / Simulation::dh_), (int)(y_start / Simulation::dh_), (int)(z_start / Simulation::dh_), (int)(width / Simulation::dh_), (int)(height / Simulation::dh_), (int)(depth / Simulation::dh_), alpha_abs));
 	}
 	file.close();
 	return partitions;
@@ -183,8 +185,11 @@ void Partition::Info()
 {
 	std::cout << info_.type << " Partition " << info_.id << ": "
 		<< x_start_ << "," << y_start_ << "," << z_start_ << "->"
-		<< x_end_ << "," << y_end_ << "," << z_end_ << std::endl;
-	std::cout << "    -> " << std::to_string(info_.num_sources) << " sources; "
+		<< x_end_ << "," << y_end_ << "," << z_end_
+		<< std::endl;
+		std::cout << "    -> air absorption = " << air_absorption_ << " (1/s)"
+		<< std::endl;
+		std::cout << "    -> " << std::to_string(info_.num_sources) << " sources; "
 		<< std::to_string(info_.num_boundaries) << " boundaries; " << std::endl;
 }
 

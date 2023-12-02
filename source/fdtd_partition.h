@@ -15,7 +15,7 @@ class FdtdPartition : public Partition
 	int GetIndex(int x, int y, int z);
 
 public:
-	FdtdPartition(int xs, int ys, int zs, int w, int h, int d);
+	FdtdPartition(int xs, int ys, int zs, int w, int h, int d, double alpha_abs_);
 	~FdtdPartition();
 
 	virtual void Update_pressure();

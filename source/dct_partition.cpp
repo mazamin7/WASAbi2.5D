@@ -3,15 +3,13 @@
 #include "dct_partition.h"
 
 
-DctPartition::DctPartition(int xs, int ys, int zs, int w, int h, int d)
-	: Partition(xs, ys, zs, w, h, d), pressure_(w, h, d), velocity_(w, h, d), residue_(w, h, d), force_(w, h, d), force_r_(w, h, d)
+DctPartition::DctPartition(int xs, int ys, int zs, int w, int h, int d, double alpha_abs_)
+	: Partition(xs, ys, zs, w, h, d, alpha_abs_), pressure_(w, h, d), velocity_(w, h, d), residue_(w, h, d), force_(w, h, d), force_r_(w, h, d)
 {
 	should_render_ = true;
 	info_.type = "DCT";
 
-	auto alpha_abs = air_absorption_;
-
-	second_order_ = alpha_abs == 0;
+	second_order_ = alpha_abs_ == 0;
 
 	prev_pressure_modes_ = (double*)calloc(width_ * height_ * depth_, sizeof(double));
 	next_pressure_modes_ = (double*)calloc(width_ * height_ * depth_, sizeof(double));
@@ -25,7 +23,7 @@ DctPartition::DctPartition(int xs, int ys, int zs, int w, int h, int d)
 	inv_w_ = (double*)calloc(width_ * height_ * depth_, sizeof(double));
 	inv_w2_ = (double*)calloc(width_ * height_ * depth_, sizeof(double));
 
-	alpha_ = alpha_abs;
+	alpha_ = alpha_abs_;
 	alpha2_ = alpha_ * alpha_;
 	eatm_ = exp(-alpha_ * dt_);
 
@@ -41,7 +39,7 @@ DctPartition::DctPartition(int xs, int ys, int zs, int w, int h, int d)
 			{
 				int idx = (i - 1) * height_ * width_ + (j - 1) * width_ + (k - 1);
 				double w_0 = c0_ * M_PI * sqrt((i - 1) * (i - 1) / lz2_ + (j - 1) * (j - 1) / ly2_ + (k - 1) * (k - 1) / lx2_);
-				double w = sqrt(w_0 * w_0 - alpha2_);
+				double w = sqrt(w_0 * w_0 - alpha2_ * 0);
 				cwt_[idx] = cos(w * dt_);
 				swt_[idx] = sin(w * dt_);
 				w_omega_[idx] = w;

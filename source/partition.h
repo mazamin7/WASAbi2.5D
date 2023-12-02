@@ -47,7 +47,7 @@ protected:
 public:
 	static double boundary_absorption_;
 
-	Partition(int xs, int ys, int zs, int w, int h, int d);
+	Partition(int xs, int ys, int zs, int w, int h, int d, double alpha_abs_);
 	~Partition();
 
 	virtual void Update_pressure() = 0;

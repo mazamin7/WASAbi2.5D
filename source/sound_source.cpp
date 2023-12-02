@@ -11,7 +11,7 @@ SoundSource::SoundSource(int x_0, int y_0, int z_0, int t_0, int points) :x_0_(x
 	static int id_generator = 0;
 	id_ = id_generator++;
 	std::string filename;
-	std::string dir_name = std::to_string(Simulation::dh_) + "_" + std::to_string(Partition::boundary_absorption_) + "_" + std::to_string(Simulation::air_absorption_);
+	std::string dir_name = std::to_string(Simulation::dh_) + "_" + std::to_string(Partition::boundary_absorption_);
 	filename = "./output/" + dir_name + "/source_" + std::to_string(id_) + ".txt";
 	source_.open(filename, std::ios::out);
 }
