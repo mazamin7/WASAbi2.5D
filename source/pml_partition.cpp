@@ -145,10 +145,20 @@ void PmlPartition::Update_pressure()
 	auto c0 = Simulation::c0_;
 	auto zeta = zeta_;
 
-	// double coefs[] = { 2.0, -27.0, 270.0, -490.0, 270.0, -27.0, 2.0 };
-	// auto amp = 180.0;
-	double coefs[] = { 0.0, 0.0, 1.0, -2.0, 1.0, 0.0, 0.0 };
-	auto amp = 1.0;
+	double coefs[7];
+	double amp = 0.0;
+
+	if (Simulation::use_seven) {
+		double temp_coefs[] = { 2.0, -27.0, 270.0, -490.0, 270.0, -27.0, 2.0 };
+		std::copy(std::begin(temp_coefs), std::end(temp_coefs), std::begin(coefs));
+		amp = 180.0;
+	}
+	else {
+		double temp_coefs[] = { 0.0, 0.0, 1.0, -2.0, 1.0, 0.0, 0.0 };
+		std::copy(std::begin(temp_coefs), std::end(temp_coefs), std::begin(coefs));
+		amp = 1.0;
+	}
+
 	double fourthCoefs[] = { 1.0, -8.0, 0.0, 8.0, -1.0 };
 
 #pragma omp parallel for

@@ -45,6 +45,7 @@ public:
 
 	static bool is_pre_merge;
 	static bool use_FDTD;
+	static bool use_seven;
 
 	int time_step_{ 0 };
 

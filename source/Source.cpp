@@ -48,6 +48,7 @@ int Simulation::n_pml_layers_ = 50;		// Number of pml layers.
 
 bool Simulation::is_pre_merge = true;	// Interpartition interface handling method
 bool Simulation::use_FDTD = false;	// Interpartition interface handling method
+bool Simulation::use_seven = true;
 
 int main()
 {
