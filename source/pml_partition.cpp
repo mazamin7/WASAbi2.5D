@@ -145,7 +145,10 @@ void PmlPartition::Update_pressure()
 	auto c0 = Simulation::c0_;
 	auto zeta = zeta_;
 
-	double coefs[] = { 2.0, -27.0, 270.0, -490.0, 270.0, -27.0, 2.0 };
+	// double coefs[] = { 2.0, -27.0, 270.0, -490.0, 270.0, -27.0, 2.0 };
+	// auto amp = 180.0;
+	double coefs[] = { 0.0, 0.0, 1.0, -2.0, 1.0, 0.0, 0.0 };
+	auto amp = 1.0;
 	double fourthCoefs[] = { 1.0, -8.0, 0.0, 8.0, -1.0 };
 
 #pragma omp parallel for
@@ -172,9 +175,9 @@ void PmlPartition::Update_pressure()
 					d2udz2 += coefs[m] * p_[GetIndex(i, j, k + m - 3)];
 				}
 				
-				d2udx2 /= (180.0 * dh * dh);
-				d2udy2 /= (180.0 * dh * dh);
-				d2udz2 /= (180.0 * dh * dh);
+				d2udx2 /= (amp * dh * dh);
+				d2udy2 /= (amp * dh * dh);
+				d2udz2 /= (amp * dh * dh);
 
 
 				// p_{tt}

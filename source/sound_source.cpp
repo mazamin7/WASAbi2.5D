@@ -6,7 +6,7 @@
 #include <assert.h>
 
 
-SoundSource::SoundSource(int x_0, int y_0, int z_0, int t_0, int points, int samples) :x_0_(x_0), y_0_(y_0), z_0_(z_0), t_0_(t_0), points_(points), samples_(samples)
+SoundSource::SoundSource(int x_0, int y_0, int z_0, int t_0, int points) :x_0_(x_0), y_0_(y_0), z_0_(z_0), t_0_(t_0), points_(points)
 {
 	static int id_generator = 0;
 	id_ = id_generator++;
@@ -29,21 +29,19 @@ std::vector<std::shared_ptr<SoundSource>> SoundSource::ImportSources(std::string
 	file.open(path, std::ifstream::in);
 	while (file.good())
 	{
-		double x_0, y_0, z_0, width, t_0, duration;
-		file >> x_0 >> y_0 >> z_0 >> t_0 >> width >> duration;
+		double x_0, y_0, z_0, width, t_0;
+		file >> x_0 >> y_0 >> z_0 >> t_0 >> width;
 		int x_0_samples = int(x_0 / Simulation::dh_);
 		int y_0_samples = int(y_0 / Simulation::dh_);
 		int z_0_samples = int(z_0 / Simulation::dh_);
 		int t_0_samples = int(t_0 / Simulation::dt_);
 		int width_samples = int(width / Simulation::dh_);
-		int duration_samples = int(duration / Simulation::dt_);
 
 		assert(width_samples != 0);
-		assert(duration_samples != 0);
 
 		if (file.eof()) break;
 
-		sources.push_back(std::make_shared<GaussianSource>(x_0_samples, y_0_samples, z_0_samples, t_0_samples, width_samples, duration_samples));
+		sources.push_back(std::make_shared<GaussianSource>(x_0_samples, y_0_samples, z_0_samples, t_0_samples, width_samples));
 	}
 	file.close();
 	for (auto source : sources)

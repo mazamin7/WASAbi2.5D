@@ -24,9 +24,9 @@ bool is_record = false;
 
 /* Set constant parameters. */
 
-double Partition::boundary_absorption_ = 0;	// Absorption coefficients of the boundaries.
+double Partition::boundary_absorption_ = 1;	// Absorption coefficients of the boundaries.
 double Simulation::air_absorption_ = 0; // Absorption coefficients of air.
-double Simulation::duration_ = 200;		// Duration of the whole simulation (seconds).
+double Simulation::duration_ = 2000;		// Duration of the whole simulation (seconds).
 
 //double Simulation::dh_ = 0.05;			// Space sampling rate.
 //double Simulation::dt_ = 0.625e-4;		// Time sampling rate.
@@ -40,11 +40,11 @@ double Simulation::duration_ = 200;		// Duration of the whole simulation (second
 //double Simulation::dh_ = 0.5;
 //double Simulation::dt_ = 6.25e-4;
 
-double Simulation::dh_ = 0.25;
-double Simulation::dt_ = 0.0625;
+double Simulation::dh_ = 0.25/2;
+double Simulation::dt_ = 0.0625/2;
 
 double Simulation::c0_ = 1; // 3.435e2;		// Speed of sound
-int Simulation::n_pml_layers_ = 10;		// Number of pml layers.
+int Simulation::n_pml_layers_ = 50;		// Number of pml layers.
 
 bool Simulation::is_pre_merge = true;	// Interpartition interface handling method
 bool Simulation::use_FDTD = false;	// Interpartition interface handling method
