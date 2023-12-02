@@ -44,7 +44,7 @@ double Simulation::dh_ = 0.25;
 double Simulation::dt_ = 0.0625;
 
 double Simulation::c0_ = 1; // 3.435e2;		// Speed of sound
-int Simulation::n_pml_layers_ = 5;		// Number of pml layers.
+int Simulation::n_pml_layers_ = 20;		// Number of pml layers.
 
 bool Simulation::is_pre_merge = true;	// Interpartition interface handling method
 bool Simulation::use_FDTD = false;	// Interpartition interface handling method
@@ -140,7 +140,18 @@ int main()
 		}
 
 		// message = std::to_string(time_step) + '/' + std::to_string(total_time_steps);
-		message = std::to_string(time_step * Simulation::dt_) + '/' + std::to_string(total_time_steps * Simulation::dt_);
+		//message = std::to_string(time_step * Simulation::dt_) + '/' + std::to_string(total_time_steps * Simulation::dt_);
+
+		char buffer[50]; // Adjust the size as needed
+
+		#ifdef _MSC_VER  // Check if using Microsoft Visual Studio
+				sprintf_s(buffer, sizeof(buffer), "%.2f/%.2f", time_step * Simulation::dt_, total_time_steps * Simulation::dt_);
+		#else
+				sprintf(buffer, "%.2f/%.2f", time_step * Simulation::dt_, total_time_steps * Simulation::dt_);
+		#endif
+
+		std::string message(buffer);
+
 		SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, message.c_str(), White);
 		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
 
