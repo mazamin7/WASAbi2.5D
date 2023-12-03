@@ -14,6 +14,7 @@ class PmlPartition : public Partition
 	double* p_new_{ nullptr };
 
 	double* v_{ nullptr };
+	double* v_new_{ nullptr };
 
 	double* phi_x_;
 	double* phi_x_new_;

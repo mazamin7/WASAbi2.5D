@@ -21,8 +21,6 @@ PmlPartition::PmlPartition(std::shared_ptr<Partition> neighbor_part, PmlType typ
 	should_render_ = true;
 	info_.type = "PML";
 
-	second_order_ = true;
-
 	if (type_ == P_LEFT || type_ == P_RIGHT) is_x_pml_ = true;
 	if (type_ == P_TOP || type_ == P_BOTTOM) is_y_pml_ = true;
 	if (type_ == P_FRONT || type_ == P_BACK) is_z_pml_ = true;
@@ -37,6 +35,7 @@ PmlPartition::PmlPartition(std::shared_ptr<Partition> neighbor_part, PmlType typ
 	p_new_ = (double *)malloc(size * sizeof(double));
 
 	v_ = (double*)malloc(size * sizeof(double));
+	v_new_ = (double*)malloc(size * sizeof(double));
 
 	phi_x_ = (double *)malloc(size * sizeof(double));
 	phi_x_new_ = (double *)malloc(size * sizeof(double));
@@ -55,6 +54,7 @@ PmlPartition::PmlPartition(std::shared_ptr<Partition> neighbor_part, PmlType typ
 	memset((void *)p_, 0, size * sizeof(double));
 	memset((void *)p_new_, 0, size * sizeof(double));
 	memset((void*)v_, 0, size * sizeof(double));
+	memset((void*)v_new_, 0, size * sizeof(double));
 	memset((void *)phi_x_, 0, size * sizeof(double));
 	memset((void *)phi_x_new_, 0, size * sizeof(double));
 	memset((void *)phi_y_, 0, size * sizeof(double));
@@ -118,6 +118,7 @@ PmlPartition::~PmlPartition()
 	free(p_);
 	free(p_new_);
 	free(v_);
+	free(v_new_);
 	free(phi_x_);
 	free(phi_x_new_);
 	free(phi_y_);
@@ -145,169 +146,357 @@ void PmlPartition::Update_pressure()
 	auto c0 = Simulation::c0_;
 	auto zeta = zeta_;
 
-	double coefs[7];
-	double amp = 0.0;
+	if (second_order_) {
+		double coefs[7];
+		double amp = 0.0;
 
-	if (Simulation::use_seven) {
-		double temp_coefs[] = { 2.0, -27.0, 270.0, -490.0, 270.0, -27.0, 2.0 };
-		std::copy(std::begin(temp_coefs), std::end(temp_coefs), std::begin(coefs));
-		amp = 180.0;
-	}
-	else {
-		double temp_coefs[] = { 0.0, 0.0, 1.0, -2.0, 1.0, 0.0, 0.0 };
-		std::copy(std::begin(temp_coefs), std::end(temp_coefs), std::begin(coefs));
-		amp = 1.0;
-	}
+		if (Simulation::use_seven) {
+			double temp_coefs[] = { 2.0, -27.0, 270.0, -490.0, 270.0, -27.0, 2.0 };
+			std::copy(std::begin(temp_coefs), std::end(temp_coefs), std::begin(coefs));
+			amp = 180.0;
+		}
+		else {
+			double temp_coefs[] = { 0.0, 0.0, 1.0, -2.0, 1.0, 0.0, 0.0 };
+			std::copy(std::begin(temp_coefs), std::end(temp_coefs), std::begin(coefs));
+			amp = 1.0;
+		}
 
-	double fourthCoefs[] = { 1.0, -8.0, 0.0, 8.0, -1.0 };
+		double fourthCoefs[] = { 1.0, -8.0, 0.0, 8.0, -1.0 };
 
-#pragma omp parallel for
-	for (int k = 0; k < depth; k++)
-	{
-//#pragma omp parallel for
-		for (int j = 0; j < height; j++)
+		#pragma omp parallel for
+		for (int k = 0; k < depth; k++)
 		{
-//#pragma omp parallel for
-			for (int i = 0; i < width; i++)
+			//#pragma omp parallel for
+			for (int j = 0; j < height; j++)
 			{
-				psi_new_[GetIndex(i, j, k)] = psi_[GetIndex(i, j, k)] + dt * p_[GetIndex(i, j, k)];
-
-				// --------------------------------------------------------
-				
-				double d2udx2 = 0.0;
-				double d2udy2 = 0.0;
-				double d2udz2 = 0.0;
-				
-				for (int m = 0; m < 7; m++)
+				//#pragma omp parallel for
+				for (int i = 0; i < width; i++)
 				{
-					d2udx2 += coefs[m] * p_[GetIndex(i + m - 3, j, k)];
-					d2udy2 += coefs[m] * p_[GetIndex(i, j + m - 3, k)];
-					d2udz2 += coefs[m] * p_[GetIndex(i, j, k + m - 3)];
+					psi_new_[GetIndex(i, j, k)] = psi_[GetIndex(i, j, k)] + dt * p_[GetIndex(i, j, k)];
+
+					// --------------------------------------------------------
+
+					double d2udx2 = 0.0;
+					double d2udy2 = 0.0;
+					double d2udz2 = 0.0;
+
+					for (int m = 0; m < 7; m++)
+					{
+						d2udx2 += coefs[m] * p_[GetIndex(i + m - 3, j, k)];
+						d2udy2 += coefs[m] * p_[GetIndex(i, j + m - 3, k)];
+						d2udz2 += coefs[m] * p_[GetIndex(i, j, k + m - 3)];
+					}
+
+					d2udx2 /= (amp * dh * dh);
+					d2udy2 /= (amp * dh * dh);
+					d2udz2 /= (amp * dh * dh);
+
+
+					// p_{tt}
+					double term1 = 2 * p_[GetIndex(i, j, k)] - p_old_[GetIndex(i, j, k)];
+
+					// c_0^2 Delta p
+					double term3 = c0 * c0 * (d2udx2 + d2udy2 + d2udz2);	// c^2*(d2udx2+d2udy2+d2udz2)
+
+					// -(Zx + Zy + Zz) p_t
+					double term4 = (zetax_[GetIndex(i, j, k)] + zetay_[GetIndex(i, j, k)] + zetaz_[GetIndex(i, j, k)]) * p_old_[GetIndex(i, j, k)] / 2 / dt;
+
+					// -(Zy Zz + Zx Zz + Zy Zz) p
+					double term5 = -(zetax_[GetIndex(i, j, k)] * zetay_[GetIndex(i, j, k)] + zetay_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)] + zetax_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)]) * p_[GetIndex(i, j, k)];
+
+
+					double dphidx = 0.0;
+					double dphidy = 0.0;
+					double dphidz = 0.0;
+
+					for (int m = 0; m < 5; m++)
+					{
+						dphidx += fourthCoefs[m] * phi_x_[GetIndex(i + m - 2, j, k)];
+						dphidy += fourthCoefs[m] * phi_y_[GetIndex(i, j + m - 2, k)];
+						dphidz += fourthCoefs[m] * phi_z_[GetIndex(i, j, k + m - 2)];
+					}
+
+					dphidx /= (12.0 * dh);
+					dphidy /= (12.0 * dh);
+					dphidz /= (12.0 * dh);
+
+
+					// Nabla phi
+					double term6 = dphidx + dphidy + dphidz;
+
+					// -Zx Zy Zz psi
+					double term7 = -zetax_[GetIndex(i, j, k)] * zetay_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)] * (psi_new_[GetIndex(i, j, k)] + psi_[GetIndex(i, j, k)]) * 0.5;
+
+
+					// p_{tt} = c_0^2 Delta p - (Zx + Zy + Zz) p_t - (Zy Zz + Zx Zz + Zy Zz) p + Nabla phi - Zx Zy Zz psi
+					p_new_[GetIndex(i, j, k)] = term1 + dt * dt * (term3 + term4 + term5 + term6 + term7 + force_[GetIndex(i, j, k)]);
+					p_new_[GetIndex(i, j, k)] = p_new_[GetIndex(i, j, k)] / (1 + dt / 2 * (zetax_[GetIndex(i, j, k)] + zetay_[GetIndex(i, j, k)] + zetaz_[GetIndex(i, j, k)]));
+
+					// --------------------------------------------------------
+
+					double dudx = 0.0;
+					double dudy = 0.0;
+					double dudz = 0.0;
+
+					for (int m = 0; m < 5; m++)
+					{
+						dudx += fourthCoefs[m] * p_[GetIndex(i + m - 2, j, k)];
+						dudy += fourthCoefs[m] * p_[GetIndex(i, j + m - 2, k)];
+						dudz += fourthCoefs[m] * p_[GetIndex(i, j, k + m - 2)];
+					}
+
+					dudx /= (12.0 * dh);
+					dudy /= (12.0 * dh);
+					dudz /= (12.0 * dh);
+
+
+					double dpsidx = 0.0;
+					double dpsidy = 0.0;
+					double dpsidz = 0.0;
+
+					for (int m = 0; m < 5; m++)
+					{
+						dpsidx += fourthCoefs[m] * p_[GetIndex(i + m - 2, j, k)];
+						dpsidy += fourthCoefs[m] * p_[GetIndex(i, j + m - 2, k)];
+						dpsidz += fourthCoefs[m] * p_[GetIndex(i, j, k + m - 2)];
+					}
+
+					dpsidx /= (12.0 * dh);
+					dpsidy /= (12.0 * dh);
+					dpsidz /= (12.0 * dh);
+
+
+					// phi_t
+					double phi_x_term_1 = phi_x_[GetIndex(i, j, k)];
+					double phi_y_term_1 = phi_y_[GetIndex(i, j, k)];
+					double phi_z_term_1 = phi_z_[GetIndex(i, j, k)];
+
+					// Gamma_11 phi
+					double phi_x_term_2 = -zetax_[GetIndex(i, j, k)] * phi_x_[GetIndex(i, j, k)];
+					double phi_y_term_2 = -zetay_[GetIndex(i, j, k)] * phi_y_[GetIndex(i, j, k)];
+					double phi_z_term_2 = -zetaz_[GetIndex(i, j, k)] * phi_z_[GetIndex(i, j, k)];
+
+					// c_0^2 Gamma_2 Nabla p
+					double phi_x_term_3 = c0 * c0 * (zetay_[GetIndex(i, j, k)] + zetaz_[GetIndex(i, j, k)] - zetax_[GetIndex(i, j, k)]) * dudx;
+					double phi_y_term_3 = c0 * c0 * (zetax_[GetIndex(i, j, k)] + zetaz_[GetIndex(i, j, k)] - zetay_[GetIndex(i, j, k)]) * dudy;
+					double phi_z_term_3 = c0 * c0 * (zetax_[GetIndex(i, j, k)] + zetay_[GetIndex(i, j, k)] - zetaz_[GetIndex(i, j, k)]) * dudz;
+
+					// c_0^2 Gamma_3 Nabla psi
+					double phi_x_term_4 = c0 * c0 * zetay_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)] * dpsidx;
+					double phi_y_term_4 = c0 * c0 * zetax_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)] * dpsidy;
+					double phi_z_term_4 = c0 * c0 * zetax_[GetIndex(i, j, k)] * zetay_[GetIndex(i, j, k)] * dpsidz;
+
+
+					// phi_t = Gamma_1 phi + c_0^2 Gamma_2 Nabla p + c_0^2 Gamma_3 Nabla psi
+					phi_x_new_[GetIndex(i, j, k)] = phi_x_term_1 + dt * (phi_x_term_2 + phi_x_term_3 + phi_x_term_4);
+					phi_y_new_[GetIndex(i, j, k)] = phi_y_term_1 + dt * (phi_y_term_2 + phi_y_term_3 + phi_y_term_4);
+					phi_z_new_[GetIndex(i, j, k)] = phi_z_term_1 + dt * (phi_z_term_2 + phi_z_term_3 + phi_z_term_4);
 				}
-				
-				d2udx2 /= (amp * dh * dh);
-				d2udy2 /= (amp * dh * dh);
-				d2udz2 /= (amp * dh * dh);
-
-
-				// p_{tt}
-				double term1 = 2 * p_[GetIndex(i, j, k)] - p_old_[GetIndex(i, j, k)];
-
-				// c_0^2 Delta p
-				double term3 = c0 * c0 * (d2udx2 + d2udy2 + d2udz2);	// c^2*(d2udx2+d2udy2+d2udz2)
-				
-				// -(Zx + Zy + Zz) p_t
-				double term4 = (zetax_[GetIndex(i, j, k)] + zetay_[GetIndex(i, j, k)] + zetaz_[GetIndex(i, j, k)]) * p_old_[GetIndex(i, j, k)] / 2 / dt;
-				
-				// -(Zy Zz + Zx Zz + Zy Zz) p
-				double term5 = -(zetax_[GetIndex(i, j, k)] * zetay_[GetIndex(i, j, k)] + zetay_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)] + zetax_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)]) * p_[GetIndex(i, j, k)];
-
-				
-				double dphidx = 0.0;
-				double dphidy = 0.0;
-				double dphidz = 0.0;
-				
-				for (int m = 0; m < 5; m++)
-				{
-					dphidx += fourthCoefs[m] * phi_x_[GetIndex(i + m - 2, j, k)];
-					dphidy += fourthCoefs[m] * phi_y_[GetIndex(i, j + m - 2, k)];
-					dphidz += fourthCoefs[m] * phi_z_[GetIndex(i, j, k + m - 2)];
-				}
-				
-				dphidx /= (12.0 * dh);
-				dphidy /= (12.0 * dh);
-				dphidz /= (12.0 * dh);
-				
-
-				// Nabla phi
-				double term6 = dphidx + dphidy + dphidz;
-
-				// -Zx Zy Zz psi
-				double term7 = -zetax_[GetIndex(i, j, k)] * zetay_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)] * ( psi_new_[GetIndex(i, j, k)] + psi_[GetIndex(i, j, k)] ) * 0.5;
-
-
-				// p_{tt} = c_0^2 Delta p - (Zx + Zy + Zz) p_t - (Zy Zz + Zx Zz + Zy Zz) p + Nabla phi - Zx Zy Zz psi
-				p_new_[GetIndex(i, j, k)] = term1 + dt * dt * (term3 + term4 + term5 + term6 + term7 + force_[GetIndex(i, j, k)]);
-				p_new_[GetIndex(i, j, k)] = p_new_[GetIndex(i, j, k)] / (1 + dt / 2 * (zetax_[GetIndex(i, j, k)] + zetay_[GetIndex(i, j, k)] + zetaz_[GetIndex(i, j, k)]));
-
-				// --------------------------------------------------------
-
-				double dudx = 0.0;
-				double dudy = 0.0;
-				double dudz = 0.0;
-
-				for (int m = 0; m < 5; m++)
-				{
-					dudx += fourthCoefs[m] * p_[GetIndex(i + m - 2, j, k)];
-					dudy += fourthCoefs[m] * p_[GetIndex(i, j + m - 2, k)];
-					dudz += fourthCoefs[m] * p_[GetIndex(i, j, k + m - 2)];
-				}
-				
-				dudx /= (12.0 * dh);
-				dudy /= (12.0 * dh);
-				dudz /= (12.0 * dh);
-
-
-				double dpsidx = 0.0;
-				double dpsidy = 0.0;
-				double dpsidz = 0.0;
-
-				for (int m = 0; m < 5; m++)
-				{
-					dpsidx += fourthCoefs[m] * p_[GetIndex(i + m - 2, j, k)];
-					dpsidy += fourthCoefs[m] * p_[GetIndex(i, j + m - 2, k)];
-					dpsidz += fourthCoefs[m] * p_[GetIndex(i, j, k + m - 2)];
-				}
-
-				dpsidx /= (12.0 * dh);
-				dpsidy /= (12.0 * dh);
-				dpsidz /= (12.0 * dh);
-				
-
-				// phi_t
-				double phi_x_term_1 = phi_x_[GetIndex(i, j, k)];
-				double phi_y_term_1 = phi_y_[GetIndex(i, j, k)];
-				double phi_z_term_1 = phi_z_[GetIndex(i, j, k)];
-
-				// Gamma_11 phi
-				double phi_x_term_2 = -zetax_[GetIndex(i, j, k)] * phi_x_[GetIndex(i, j, k)];
-				double phi_y_term_2 = -zetay_[GetIndex(i, j, k)] * phi_y_[GetIndex(i, j, k)];
-				double phi_z_term_2 = -zetaz_[GetIndex(i, j, k)] * phi_z_[GetIndex(i, j, k)];
-
-				// c_0^2 Gamma_2 Nabla p
-				double phi_x_term_3 = c0 * c0 * (zetay_[GetIndex(i, j, k)] + zetaz_[GetIndex(i, j, k)] - zetax_[GetIndex(i, j, k)]) * dudx;
-				double phi_y_term_3 = c0 * c0 * (zetax_[GetIndex(i, j, k)] + zetaz_[GetIndex(i, j, k)] - zetay_[GetIndex(i, j, k)]) * dudy;
-				double phi_z_term_3 = c0 * c0 * (zetax_[GetIndex(i, j, k)] + zetay_[GetIndex(i, j, k)] - zetaz_[GetIndex(i, j, k)]) * dudz;
-
-				// c_0^2 Gamma_3 Nabla psi
-				double phi_x_term_4 = c0 * c0 * zetay_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)] * dpsidx;
-				double phi_y_term_4 = c0 * c0 * zetax_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)] * dpsidy;
-				double phi_z_term_4 = c0 * c0 * zetax_[GetIndex(i, j, k)] * zetay_[GetIndex(i, j, k)] * dpsidz;
-
-
-				// phi_t = Gamma_1 phi + c_0^2 Gamma_2 Nabla p + c_0^2 Gamma_3 Nabla psi
-				phi_x_new_[GetIndex(i, j, k)] = phi_x_term_1 + dt * (phi_x_term_2 + phi_x_term_3 + phi_x_term_4);
-				phi_y_new_[GetIndex(i, j, k)] = phi_y_term_1 + dt * (phi_y_term_2 + phi_y_term_3 + phi_y_term_4);
-				phi_z_new_[GetIndex(i, j, k)] = phi_z_term_1 + dt * (phi_z_term_2 + phi_z_term_3 + phi_z_term_4);
 			}
 		}
+
+		p_old_ = p_;
+		p_ = p_new_;
+
+		psi_ = psi_new_;
+
+		phi_x_ = phi_x_new_;
+		phi_y_ = phi_y_new_;
+		phi_z_ = phi_z_new_;
+
+		// memset((void *)force_, 0, width * height * depth * sizeof(double));
 	}
+	else {
+		#pragma omp parallel for
+		for (int k = 0; k < depth; k++)
+		{
+			//#pragma omp parallel for
+			for (int j = 0; j < height; j++)
+			{
+				//#pragma omp parallel for
+				for (int i = 0; i < width; i++)
+				{
+					p_new_[GetIndex(i, j, k)] = p_[GetIndex(i, j, k)] + dt_ * v_[GetIndex(i, j, k)];
+				}
+			}
+		}
 
-	p_old_ = p_;
-	p_ = p_new_;
-
-	psi_ = psi_new_;
-
-	phi_x_ = phi_x_new_;
-	phi_y_ = phi_y_new_;
-	phi_z_ = phi_z_new_;
-
-	// memset((void *)force_, 0, width * height * depth * sizeof(double));
+		p_ = p_new_;
+	}
 }
 
 void PmlPartition::Update_velocity()
 {
-	return; // velocity not considered in second order
+	int width = width_;
+	int height = height_;
+	int depth = depth_;
+	auto type = type_;
+	auto thickness = thickness_;
+	auto dh = Simulation::dh_;
+	auto dt = Simulation::dt_;
+	auto c0 = Simulation::c0_;
+	auto zeta = zeta_;
+
+	if (second_order_) {
+		return; // velocity not considered in second order
+	}
+	else {
+		double coefs[7];
+		double amp = 0.0;
+
+		if (Simulation::use_seven) {
+			double temp_coefs[] = { 2.0, -27.0, 270.0, -490.0, 270.0, -27.0, 2.0 };
+			std::copy(std::begin(temp_coefs), std::end(temp_coefs), std::begin(coefs));
+			amp = 180.0;
+		}
+		else {
+			double temp_coefs[] = { 0.0, 0.0, 1.0, -2.0, 1.0, 0.0, 0.0 };
+			std::copy(std::begin(temp_coefs), std::end(temp_coefs), std::begin(coefs));
+			amp = 1.0;
+		}
+
+		double fourthCoefs[] = { 1.0, -8.0, 0.0, 8.0, -1.0 };
+
+		#pragma omp parallel for
+		for (int k = 0; k < depth; k++)
+		{
+			//#pragma omp parallel for
+			for (int j = 0; j < height; j++)
+			{
+				//#pragma omp parallel for
+				for (int i = 0; i < width; i++)
+				{
+					psi_new_[GetIndex(i, j, k)] = psi_[GetIndex(i, j, k)] + dt * p_[GetIndex(i, j, k)];
+
+					// --------------------------------------------------------
+
+					double d2udx2 = 0.0;
+					double d2udy2 = 0.0;
+					double d2udz2 = 0.0;
+
+					for (int m = 0; m < 7; m++)
+					{
+						d2udx2 += coefs[m] * p_[GetIndex(i + m - 3, j, k)];
+						d2udy2 += coefs[m] * p_[GetIndex(i, j + m - 3, k)];
+						d2udz2 += coefs[m] * p_[GetIndex(i, j, k + m - 3)];
+					}
+
+					d2udx2 /= (amp * dh * dh);
+					d2udy2 /= (amp * dh * dh);
+					d2udz2 /= (amp * dh * dh);
+
+
+					// v_{t}
+					double term1 = v_[GetIndex(i, j, k)];
+
+					// c_0^2 Delta p
+					double term3 = c0 * c0 * (d2udx2 + d2udy2 + d2udz2);	// c^2*(d2udx2+d2udy2+d2udz2)
+
+					// -(Zx + Zy + Zz) p_t
+					double term4 = -(zetax_[GetIndex(i, j, k)] + zetay_[GetIndex(i, j, k)] + zetaz_[GetIndex(i, j, k)]) * v_[GetIndex(i, j, k)] / 2;
+
+					// -(Zy Zz + Zx Zz + Zy Zz) p
+					double term5 = -(zetax_[GetIndex(i, j, k)] * zetay_[GetIndex(i, j, k)] + zetay_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)] + zetax_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)]) * p_[GetIndex(i, j, k)];
+
+
+					double dphidx = 0.0;
+					double dphidy = 0.0;
+					double dphidz = 0.0;
+
+					for (int m = 0; m < 5; m++)
+					{
+						dphidx += fourthCoefs[m] * phi_x_[GetIndex(i + m - 2, j, k)];
+						dphidy += fourthCoefs[m] * phi_y_[GetIndex(i, j + m - 2, k)];
+						dphidz += fourthCoefs[m] * phi_z_[GetIndex(i, j, k + m - 2)];
+					}
+
+					dphidx /= (12.0 * dh);
+					dphidy /= (12.0 * dh);
+					dphidz /= (12.0 * dh);
+
+
+					// Nabla phi
+					double term6 = dphidx + dphidy + dphidz;
+
+					// -Zx Zy Zz psi
+					double term7 = -zetax_[GetIndex(i, j, k)] * zetay_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)] * (psi_new_[GetIndex(i, j, k)] + psi_[GetIndex(i, j, k)]) * 0.5;
+
+
+					// v_{t} = c_0^2 Delta p - (Zx + Zy + Zz) p_t - (Zy Zz + Zx Zz + Zy Zz) p + Nabla phi - Zx Zy Zz psi
+					v_new_[GetIndex(i, j, k)] = term1 + dt * (term3 + term4 + term5 + term6 + term7 + force_[GetIndex(i, j, k)]);
+					v_new_[GetIndex(i, j, k)] = v_new_[GetIndex(i, j, k)] / (1 + dt / 2 * (zetax_[GetIndex(i, j, k)] + zetay_[GetIndex(i, j, k)] + zetaz_[GetIndex(i, j, k)]));
+
+					// --------------------------------------------------------
+
+					double dudx = 0.0;
+					double dudy = 0.0;
+					double dudz = 0.0;
+
+					for (int m = 0; m < 5; m++)
+					{
+						dudx += fourthCoefs[m] * p_[GetIndex(i + m - 2, j, k)];
+						dudy += fourthCoefs[m] * p_[GetIndex(i, j + m - 2, k)];
+						dudz += fourthCoefs[m] * p_[GetIndex(i, j, k + m - 2)];
+					}
+
+					dudx /= (12.0 * dh);
+					dudy /= (12.0 * dh);
+					dudz /= (12.0 * dh);
+
+
+					double dpsidx = 0.0;
+					double dpsidy = 0.0;
+					double dpsidz = 0.0;
+
+					for (int m = 0; m < 5; m++)
+					{
+						dpsidx += fourthCoefs[m] * p_[GetIndex(i + m - 2, j, k)];
+						dpsidy += fourthCoefs[m] * p_[GetIndex(i, j + m - 2, k)];
+						dpsidz += fourthCoefs[m] * p_[GetIndex(i, j, k + m - 2)];
+					}
+
+					dpsidx /= (12.0 * dh);
+					dpsidy /= (12.0 * dh);
+					dpsidz /= (12.0 * dh);
+
+
+					// phi_t
+					double phi_x_term_1 = phi_x_[GetIndex(i, j, k)];
+					double phi_y_term_1 = phi_y_[GetIndex(i, j, k)];
+					double phi_z_term_1 = phi_z_[GetIndex(i, j, k)];
+
+					// Gamma_11 phi
+					double phi_x_term_2 = -zetax_[GetIndex(i, j, k)] * phi_x_[GetIndex(i, j, k)];
+					double phi_y_term_2 = -zetay_[GetIndex(i, j, k)] * phi_y_[GetIndex(i, j, k)];
+					double phi_z_term_2 = -zetaz_[GetIndex(i, j, k)] * phi_z_[GetIndex(i, j, k)];
+
+					// c_0^2 Gamma_2 Nabla p
+					double phi_x_term_3 = c0 * c0 * (zetay_[GetIndex(i, j, k)] + zetaz_[GetIndex(i, j, k)] - zetax_[GetIndex(i, j, k)]) * dudx;
+					double phi_y_term_3 = c0 * c0 * (zetax_[GetIndex(i, j, k)] + zetaz_[GetIndex(i, j, k)] - zetay_[GetIndex(i, j, k)]) * dudy;
+					double phi_z_term_3 = c0 * c0 * (zetax_[GetIndex(i, j, k)] + zetay_[GetIndex(i, j, k)] - zetaz_[GetIndex(i, j, k)]) * dudz;
+
+					// c_0^2 Gamma_3 Nabla psi
+					double phi_x_term_4 = c0 * c0 * zetay_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)] * dpsidx;
+					double phi_y_term_4 = c0 * c0 * zetax_[GetIndex(i, j, k)] * zetaz_[GetIndex(i, j, k)] * dpsidy;
+					double phi_z_term_4 = c0 * c0 * zetax_[GetIndex(i, j, k)] * zetay_[GetIndex(i, j, k)] * dpsidz;
+
+
+					// phi_t = Gamma_1 phi + c_0^2 Gamma_2 Nabla p + c_0^2 Gamma_3 Nabla psi
+					phi_x_new_[GetIndex(i, j, k)] = phi_x_term_1 + dt * (phi_x_term_2 + phi_x_term_3 + phi_x_term_4);
+					phi_y_new_[GetIndex(i, j, k)] = phi_y_term_1 + dt * (phi_y_term_2 + phi_y_term_3 + phi_y_term_4);
+					phi_z_new_[GetIndex(i, j, k)] = phi_z_term_1 + dt * (phi_z_term_2 + phi_z_term_3 + phi_z_term_4);
+				}
+			}
+		}
+
+		v_ = v_new_;
+
+		psi_ = psi_new_;
+
+		phi_x_ = phi_x_new_;
+		phi_y_ = phi_y_new_;
+		phi_z_ = phi_z_new_;
+	}
 }
 
 double* PmlPartition::get_pressure_field()

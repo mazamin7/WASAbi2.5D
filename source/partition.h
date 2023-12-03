@@ -14,8 +14,6 @@ protected:
 	double dt_;
 	double c0_;
 	double air_absorption_;
-	bool is_second_order_;
-
 	bool second_order_; // true -> second order, false -> first order
 
 	int x_start_, x_end_;
