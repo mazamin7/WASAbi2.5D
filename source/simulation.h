@@ -44,6 +44,7 @@ public:
 	static int n_pml_layers_;
 
 	static bool is_pre_merge;
+	static bool is_second_order;
 	static bool use_FDTD;
 	static bool use_seven;
 

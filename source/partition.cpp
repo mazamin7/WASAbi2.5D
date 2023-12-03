@@ -19,7 +19,7 @@ Partition::Partition(int xs, int ys, int zs, int w, int h, int d, double alpha_a
 	c0_ = Simulation::c0_;
 	air_absorption_ = alpha_abs_;
 
-	second_order_ = air_absorption_ == 0;
+	second_order_ = Simulation::is_second_order;
 
 	x_end_ = x_start_ + width_;
 	y_end_ = y_start_ + height_;

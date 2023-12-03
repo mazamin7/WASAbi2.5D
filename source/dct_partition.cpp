@@ -1,6 +1,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include "dct_partition.h"
+#include "simulation.h"
 
 
 DctPartition::DctPartition(int xs, int ys, int zs, int w, int h, int d, double alpha_abs_)
@@ -8,8 +9,6 @@ DctPartition::DctPartition(int xs, int ys, int zs, int w, int h, int d, double a
 {
 	should_render_ = true;
 	info_.type = "DCT";
-
-	second_order_ = alpha_abs_ == 0;
 
 	prev_pressure_modes_ = (double*)calloc(width_ * height_ * depth_, sizeof(double));
 	next_pressure_modes_ = (double*)calloc(width_ * height_ * depth_, sizeof(double));

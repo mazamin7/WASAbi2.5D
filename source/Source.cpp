@@ -47,6 +47,7 @@ double Simulation::c0_ = 1; // 3.435e2;		// Speed of sound
 int Simulation::n_pml_layers_ = 50;		// Number of pml layers.
 
 bool Simulation::is_pre_merge = true;	// Interpartition interface handling method
+bool Simulation::is_second_order = false;
 bool Simulation::use_FDTD = false;	// Interpartition interface handling method
 bool Simulation::use_seven = false;
 
