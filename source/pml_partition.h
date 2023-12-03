@@ -5,7 +5,7 @@ class PmlPartition : public Partition
 {
 	std::shared_ptr<Partition> neighbor_part_;
 
-	double R_{1.0E-1};
+	double R_{5.0E-2};
 	double zeta_;
 	double thickness_;
 
